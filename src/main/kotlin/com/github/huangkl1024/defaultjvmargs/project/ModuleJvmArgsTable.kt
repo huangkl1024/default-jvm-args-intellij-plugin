@@ -10,6 +10,7 @@ import com.intellij.util.containers.stream
 import com.intellij.util.containers.toArray
 import com.intellij.util.ui.ColumnInfo
 import com.intellij.util.ui.ListTableModel
+import com.intellij.util.ui.table.TableModelEditor
 import java.util.*
 import javax.swing.DefaultCellEditor
 import javax.swing.table.TableCellEditor
@@ -18,14 +19,18 @@ class ModuleJvmArgsTable(private val project: Project) : ListTableWithButtons<Mo
     private val myProject: Project = project
 
     override fun createListModel(): ListTableModel<*> {
-        return ListTableModel<ModuleJvmArgsItem>(ModuleNameColumnInfo {
-            myProject.modules.stream().map { it.name }
-                .toList().toArray(emptyArray())
-        }, JvmArgsColumnInfo())
+        return ListTableModel<ModuleJvmArgsItem>(
+            EnableColumnInfo(),
+            ModuleNameColumnInfo {
+                myProject.modules.stream().map { it.name }
+                    .toList().toArray(emptyArray())
+            },
+            JvmArgsColumnInfo()
+        )
     }
 
     override fun createElement(): ModuleJvmArgsItem {
-        return ModuleJvmArgsItem("", "")
+        return ModuleJvmArgsItem(true, "", "")
     }
 
     override fun isEmpty(element: ModuleJvmArgsItem?): Boolean {
@@ -34,7 +39,7 @@ class ModuleJvmArgsTable(private val project: Project) : ListTableWithButtons<Mo
     }
 
     override fun cloneElement(variable: ModuleJvmArgsItem?): ModuleJvmArgsItem {
-        return ModuleJvmArgsItem(variable?.moduleName, variable?.jvmArgs)
+        return ModuleJvmArgsItem(variable?.enable, variable?.moduleName, variable?.jvmArgs)
     }
 
     override fun canDeleteElement(selection: ModuleJvmArgsItem?): Boolean {
@@ -69,6 +74,21 @@ class ModuleJvmArgsTable(private val project: Project) : ListTableWithButtons<Mo
 
     private fun getPersistentState(): ProjectSettingsState {
         return ProjectSettingsPersistentData.getInstance(project).state
+    }
+
+    class EnableColumnInfo :
+        TableModelEditor.EditableColumnInfo<ModuleJvmArgsItem, Boolean>(MyBundle.message("default.jvm.args.project.settings.module.jvm.args.table.column.enable")) {
+        override fun getColumnClass(): Class<*> {
+            return Boolean::class.java
+        }
+
+        override fun valueOf(item: ModuleJvmArgsItem): Boolean? {
+            return item.enable
+        }
+
+        override fun setValue(item: ModuleJvmArgsItem, value: Boolean) {
+            item.enable = value
+        }
     }
 
     class ModuleNameColumnInfo(private val moduleNamesGetter: () -> Array<String>) :

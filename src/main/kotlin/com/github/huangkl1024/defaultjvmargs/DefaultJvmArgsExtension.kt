@@ -57,7 +57,7 @@ class DefaultJvmArgsExtension : RunConfigurationExtension() {
         val state = configuration.state
         if (state is ModuleBasedConfigurationOptions && projectSettingsState.moduleJvmArgsList.isNotEmpty()) {
             val module = state.module
-            projectSettingsState.moduleJvmArgsList.stream().filter { it.moduleName.equals(module) }
+            projectSettingsState.moduleJvmArgsList.stream().filter { it.enable == true && it.moduleName.equals(module) }
                 .forEach { parseJvmArgs(jvmArgList, it.jvmArgs) }
         }
     }
